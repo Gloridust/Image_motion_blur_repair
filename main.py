@@ -26,7 +26,11 @@ def train():
 
     # 数据集加载
     train_dataset = DeblurDataset(split='train')
+    val_dataset = DeblurDataset(split='val')
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+
+    best_val_loss = float('inf')
 
     for epoch in range(num_epochs):
         feature_extractor.train()
@@ -63,11 +67,49 @@ def train():
         avg_loss = epoch_loss / len(train_loader)
         print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss:.4f}")
 
-        # 保存模型
-        torch.save({
-            'feature_extractor_state_dict': feature_extractor.state_dict(),
-            'unet_state_dict': unet.state_dict(),
-        }, f"model_epoch_{epoch+1}.pth")
+        # 验证模型
+        val_loss = validate(feature_extractor, unet, val_loader, device, mse_loss, timesteps)
+        print(f"Epoch [{epoch+1}/{num_epochs}], Validation Loss: {val_loss:.4f}")
+
+        # 保存最佳模型
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            torch.save({
+                'feature_extractor_state_dict': feature_extractor.state_dict(),
+                'unet_state_dict': unet.state_dict(),
+            }, "best_model.pth")
+            print("Best model saved.")
+
+def validate(feature_extractor, unet, val_loader, device, criterion, timesteps):
+    feature_extractor.eval()
+    unet.eval()
+    val_loss = 0.0
+    with torch.no_grad():
+        for blur_img, sharp_img in val_loader:
+            blur_img = blur_img.to(device)
+            sharp_img = sharp_img.to(device)
+
+            # 提取条件特征
+            cond_feat = feature_extractor(blur_img)
+
+            # 随机选择时间步
+            batch_size = blur_img.size(0)
+            t = torch.randint(0, timesteps, (batch_size,), device=device).long()
+
+            # 计算对应的 α_t
+            a_t = extract(alphas_cumprod, t, sharp_img.shape)
+
+            # 添加噪声
+            noise = torch.randn_like(sharp_img)
+            noisy_img = torch.sqrt(a_t) * sharp_img + torch.sqrt(1 - a_t) * noise
+
+            # 前向传播
+            output = unet(noisy_img, t.float() / timesteps, cond_feat)
+            loss = criterion(output, noise)
+
+            val_loss += loss.item()
+
+    return val_loss / len(val_loader)
 
 def sample(feature_extractor, unet, blur_img, device, timesteps=1000):
     feature_extractor.eval()
@@ -95,7 +137,7 @@ def test():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     feature_extractor = FeatureExtractor().to(device)
     unet = ConditionalUNet().to(device)
-    checkpoint = torch.load('model_epoch_50.pth')
+    checkpoint = torch.load('best_model.pth')
     feature_extractor.load_state_dict(checkpoint['feature_extractor_state_dict'])
     unet.load_state_dict(checkpoint['unet_state_dict'])
 
