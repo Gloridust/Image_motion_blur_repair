@@ -16,13 +16,12 @@ class DeblurDataset(Dataset):
             self.sharp_dir = 'data/sharp_val'
         elif self.split == 'test':
             self.blur_dir = 'data/blur_test'
-            self.sharp_dir = 'data/sharp_test'  # 如果测试集没有清晰图像，可忽略
+            self.sharp_dir = None  # 测试集无需清晰图像
         else:
             raise ValueError("split must be 'train', 'val', or 'test'.")
 
         self.blur_images = sorted(os.listdir(self.blur_dir))
-        # 如果有对应的清晰图像
-        if os.path.exists(self.sharp_dir):
+        if self.sharp_dir:
             self.sharp_images = sorted(os.listdir(self.sharp_dir))
         else:
             self.sharp_images = None
@@ -42,6 +41,5 @@ class DeblurDataset(Dataset):
             sharp_img = Image.open(os.path.join(self.sharp_dir, self.sharp_images[idx])).convert('RGB')
             sharp_img = self.transform(sharp_img)
         else:
-            sharp_img = blur_img  # 占位符
-
+            sharp_img = None
         return blur_img, sharp_img
