@@ -52,9 +52,10 @@ data/
 
 ### 获取数据集
 
-可以使用 **GoPro Dataset** 或 **REDS Dataset**，也可以自行合成数据：
+可以使用 **GoPro Dataset** 或 **REDS Dataset**:
 
-- **自合成数据**：对清晰图像应用随机的运动模糊核生成对应的模糊图像。
+- GoPro Dataset：一个广泛使用的去模糊数据集，包含了使用GoPro相机拍摄的视频帧序列，提供了清晰和对应的模糊图像对。下载链接：[GoPro Dataset](https://github.com/csjliang/DeblurGAN)
+- REDS Dataset：由NTIRE挑战赛发布，包含高质量的视频序列，可用于生成清晰/模糊图像对。下载链接：[REDS Dataset](https://seungjunnah.github.io/Datasets/reds.html)
 
 ## 训练模型
 
