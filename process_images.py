@@ -50,8 +50,8 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     feature_extractor, unet = load_model(device)
 
-    blur_dir = 'blur_use'
-    sharp_dir = 'sharp_use'
+    blur_dir = 'data/blur_use'
+    sharp_dir = 'data/sharp_use'
     if not os.path.exists(sharp_dir):
         os.makedirs(sharp_dir)
 

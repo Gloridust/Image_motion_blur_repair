@@ -139,7 +139,7 @@ def train():
                 torch.save({
                     'feature_extractor_state_dict': feature_extractor.state_dict(),
                     'unet_state_dict': unet.state_dict(),
-                }, "best_model.pth")
+                }, "checkpoints/best_model.pth")
                 print("Best model saved.")
                 patience_counter = 0
             else:
