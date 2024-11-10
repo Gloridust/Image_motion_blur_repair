@@ -54,6 +54,7 @@ class ConditionalUNet(nn.Module):
             nn.Conv2d(base_channels * 2, base_channels * 2, kernel_size=3, padding=1),
         )
         self.up1 = nn.ConvTranspose2d(base_channels * 2, base_channels, kernel_size=4, stride=2, padding=1)
+        self.adjust_channels = nn.Conv2d(img_channels, base_channels, kernel_size=1)  # 新增卷积层
         self.dec1 = nn.Sequential(
             nn.ReLU(),
             nn.Conv2d(base_channels, base_channels, kernel_size=3, padding=1),
@@ -74,6 +75,7 @@ class ConditionalUNet(nn.Module):
         x2 = self.down1(x1)
         x3 = self.enc2(x2 + context2)
         x4 = self.up1(x3)
-        x5 = self.dec1(x4 + x1 + context1)
+        x1_adjusted = self.adjust_channels(x1)  # 调整 x1 的通道数
+        x5 = self.dec1(x4 + x1_adjusted + context1)
         out = self.conv_out(x5)
         return out
