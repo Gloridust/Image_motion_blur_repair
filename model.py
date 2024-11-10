@@ -41,7 +41,8 @@ class ConditionalUNet(nn.Module):
             nn.ReLU(),
             nn.Linear(time_embed_dim, time_embed_dim),
         )
-        self.context_conv = nn.Conv2d(time_embed_dim, img_channels, kernel_size=1)  # 新增卷积层
+        self.context_conv1 = nn.Conv2d(time_embed_dim, img_channels, kernel_size=1)  # 调整通道数
+        self.context_conv2 = nn.Conv2d(time_embed_dim, base_channels * 2, kernel_size=1)  # 调整通道数
         self.enc1 = nn.Sequential(
             nn.Conv2d(img_channels, base_channels, kernel_size=3, padding=1),
             nn.ReLU(),
@@ -66,12 +67,13 @@ class ConditionalUNet(nn.Module):
         t_embed = self.time_embed(t.unsqueeze(-1))
         cond_embed = self.cond_embed(cond)
         context = t_embed + cond_embed  # 融合时间和条件信息
-        context = self.context_conv(context[:, :, None, None])  # 调整通道数
+        context1 = self.context_conv1(context[:, :, None, None])  # 调整通道数
+        context2 = self.context_conv2(context[:, :, None, None])  # 调整通道数
 
-        x1 = self.enc1(x + context)
+        x1 = self.enc1(x + context1)
         x2 = self.down1(x1)
-        x3 = self.enc2(x2 + context)
+        x3 = self.enc2(x2 + context2)
         x4 = self.up1(x3)
-        x5 = self.dec1(x4 + x1 + context)
+        x5 = self.dec1(x4 + x1 + context1)
         out = self.conv_out(x5)
         return out
