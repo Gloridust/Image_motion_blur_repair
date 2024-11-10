@@ -9,7 +9,7 @@ def load_model(device):
     # 加载预训练的模型
     feature_extractor = FeatureExtractor().to(device)
     unet = ConditionalUNet().to(device)
-    checkpoint = torch.load('best_model.pth', map_location=device)
+    checkpoint = torch.load('checkpoints/best_model.pth', map_location=device)
     feature_extractor.load_state_dict(checkpoint['feature_extractor_state_dict'])
     unet.load_state_dict(checkpoint['unet_state_dict'])
     feature_extractor.eval()
