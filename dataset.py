@@ -20,9 +20,10 @@ class DeblurDataset(Dataset):
         else:
             raise ValueError("split must be 'train', 'val', or 'test'.")
 
-        self.blur_images = sorted(os.listdir(self.blur_dir))
+        # 只保留图像文件
+        self.blur_images = sorted([f for f in os.listdir(self.blur_dir) if f.endswith(('.png', '.jpg', '.jpeg'))])
         if self.sharp_dir:
-            self.sharp_images = sorted(os.listdir(self.sharp_dir))
+            self.sharp_images = sorted([f for f in os.listdir(self.sharp_dir) if f.endswith(('.png', '.jpg', '.jpeg'))])
         else:
             self.sharp_images = None
 
